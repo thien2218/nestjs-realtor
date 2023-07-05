@@ -8,6 +8,6 @@ export class AuthController {
 
    @Post("signup")
    signupUser(@Body() body: SignupDto) {
-      this.authService.createUser(body);
+      return this.authService.createUser(body);
    }
 }
