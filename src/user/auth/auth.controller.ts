@@ -1,13 +1,27 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Param, ParseEnumPipe, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { SignupDto } from "./auth.dto";
+import { GenerateAccessKeyDto, SigninDto, SignupDto } from "./auth.dto";
+import { UserRole } from "@prisma/client";
 
 @Controller("auth")
 export class AuthController {
    constructor(private readonly authService: AuthService) {}
 
-   @Post("signup")
-   signupUser(@Body() body: SignupDto) {
-      return this.authService.createUser(body);
+   @Post("signup/:userRole")
+   async signup(
+      @Body() body: SignupDto,
+      @Param("userRole", new ParseEnumPipe(UserRole)) userRole: UserRole
+   ) {
+      return this.authService.signup(body, userRole);
+   }
+
+   @Post("signin")
+   signin(@Body() body: SigninDto) {
+      return this.authService.signin(body);
+   }
+
+   @Post("key")
+   generateAccessKey(@Body() body: GenerateAccessKeyDto) {
+      return this.authService.generateAccessKey(body);
    }
 }

@@ -1,6 +1,9 @@
+import { UserRole } from "@prisma/client";
 import {
    IsEmail,
+   IsEnum,
    IsNotEmpty,
+   IsOptional,
    IsString,
    Matches,
    MaxLength,
@@ -24,4 +27,29 @@ export class SignupDto {
    @MinLength(6)
    @MaxLength(20)
    password: string;
+
+   @IsString()
+   @IsOptional()
+   accessKey?: string;
+}
+
+export class SigninDto {
+   @IsEmail()
+   @IsNotEmpty()
+   email: string;
+
+   @IsString()
+   @IsNotEmpty()
+   @MinLength(6)
+   @MaxLength(20)
+   password: string;
+}
+
+export class GenerateAccessKeyDto {
+   @IsEmail()
+   @IsNotEmpty()
+   email: string;
+
+   @IsEnum(UserRole)
+   userRole: string;
 }
