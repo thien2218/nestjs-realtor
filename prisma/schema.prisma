@@ -44,6 +44,7 @@ model Home {
    bathrooms_count Int
    city            String
    price           Float
+   land_size       Float
    property_type   PropertyType
    listed_date     DateTime     @default(now())
    updated_at      DateTime     @updatedAt

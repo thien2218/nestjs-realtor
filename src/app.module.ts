@@ -1,21 +1,21 @@
-import { Module, ValidationPipe } from "@nestjs/common";
-import { APP_PIPE } from "@nestjs/core";
+import {
+   ClassSerializerInterceptor,
+   Module,
+   ValidationPipe
+} from "@nestjs/common";
+import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { UserModule } from "./user/user.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ConfigModule } from "@nestjs/config";
+import { HomeModule } from "./home/home.module";
 
 @Module({
    controllers: [],
    imports: [
+      ConfigModule.forRoot({ isGlobal: true }),
       UserModule,
       PrismaModule,
-      ConfigModule.forRoot({ isGlobal: true })
-   ],
-   providers: [
-      {
-         provide: APP_PIPE,
-         useClass: ValidationPipe
-      }
+      HomeModule
    ]
 })
 export class AppModule {}
