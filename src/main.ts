@@ -1,7 +1,7 @@
 import { NestFactory, Reflector } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ClassSerializerInterceptor, ValidationPipe } from "@nestjs/common";
-import { CamelCaseInterceptor } from "./interceptors/camelCase.interceptor";
+import { CamelCaseInterceptor } from "./utils/interceptors/camelCase.interceptor";
 
 async function bootstrap() {
    const app = await NestFactory.create(AppModule);

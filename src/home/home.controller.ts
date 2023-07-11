@@ -10,9 +10,10 @@ import {
    UseInterceptors
 } from "@nestjs/common";
 import { HomeService } from "./home.service";
-import { CreateHomeDto, GetHomeDto } from "./home.dto";
+import { CreateHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
-import { SnakeCaseInterceptor } from "src/interceptors/snakeCase.interceptor";
+import { SnakeCaseInterceptor } from "src/utils/interceptors/snakeCase.interceptor";
+import { User, UserInfo } from "src/utils/decorators/user.decorator";
 
 @Controller("home")
 export class HomeController {
@@ -43,7 +44,8 @@ export class HomeController {
    }
 
    @Get(":id")
-   getHomeById(@Param("id") id: string) {
+   getHomeById(@Param("id") id: string, @User() user: UserInfo) {
+      console.log(user);
       return this.homeService.getHomeById(id);
    }
 
