@@ -4,16 +4,15 @@ import {
    Delete,
    Get,
    Param,
-   ParseFloatPipe,
    Post,
    Put,
    Query,
-   UsePipes
+   UseInterceptors
 } from "@nestjs/common";
 import { HomeService } from "./home.service";
 import { CreateHomeDto, GetHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
-import { SnakeCasePipe } from "src/pipes/snakeCase.pipe";
+import { SnakeCaseInterceptor } from "src/interceptors/snakeCase.interceptor";
 
 @Controller("home")
 export class HomeController {
@@ -25,7 +24,7 @@ export class HomeController {
       @Query("minPrice") minPrice?: string,
       @Query("maxPrice") maxPrice?: string,
       @Query("propType") propertyType?: PropertyType
-   ): Promise<GetHomeDto[]> {
+   ) {
       const price =
          minPrice || maxPrice
             ? {
@@ -49,10 +48,10 @@ export class HomeController {
    }
 
    @Post()
-   @UsePipes(new SnakeCasePipe())
+   @UseInterceptors(new SnakeCaseInterceptor())
    createHome(@Body() body: CreateHomeDto) {
-      console.log(body);
-      return "Created";
+      this.homeService.createHome(body);
+      return {};
    }
 
    @Put(":id")

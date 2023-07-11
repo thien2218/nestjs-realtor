@@ -1,6 +1,7 @@
 import { NestFactory, Reflector } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ClassSerializerInterceptor, ValidationPipe } from "@nestjs/common";
+import { CamelCaseInterceptor } from "./interceptors/camelCase.interceptor";
 
 async function bootstrap() {
    const app = await NestFactory.create(AppModule);
@@ -12,7 +13,8 @@ async function bootstrap() {
       })
    );
    app.useGlobalInterceptors(
-      new ClassSerializerInterceptor(app.get(Reflector))
+      new ClassSerializerInterceptor(app.get(Reflector)),
+      new CamelCaseInterceptor()
    );
    await app.listen(3001);
 }

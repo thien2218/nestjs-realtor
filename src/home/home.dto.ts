@@ -1,5 +1,5 @@
 import { PropertyType } from "@prisma/client";
-import { Exclude, Expose, Type } from "class-transformer";
+import { Exclude, Type } from "class-transformer";
 import {
    ArrayNotEmpty,
    IsArray,
@@ -7,34 +7,21 @@ import {
    IsNotEmpty,
    IsPositive,
    IsString,
+   IsUrl,
    ValidateNested
 } from "class-validator";
 
 export class GetHomeDto {
-   @Expose({ name: "bedroomsCount" })
-   bedrooms_count: number;
-
-   @Expose({ name: "bathroomsCount" })
-   bathrooms_count: number;
-
-   @Expose({ name: "landSize" })
-   land_size: number;
-
-   @Expose({ name: "propertyType" })
-   property_type: PropertyType;
-
    @Exclude()
    listed_date: Date;
 
    @Exclude()
    updated_at: Date;
-
-   constructor(partial: Partial<GetHomeDto>) {
-      Object.assign(this, partial);
-   }
 }
 
 class HomeImage {
+   @IsUrl()
+   @IsNotEmpty()
    url: string;
 }
 
@@ -52,16 +39,19 @@ export class CreateHomeDto {
    city: string;
 
    @IsPositive()
-   bedroomsCount: number;
+   bedrooms_count: number;
 
    @IsPositive()
-   bathroomsCount: number;
+   bathrooms_count: number;
 
    @IsPositive()
-   landSize: number;
+   land_size: number;
 
    @IsPositive()
    price: number;
+
+   @IsEnum(PropertyType)
+   property_type: PropertyType;
 
    @ArrayNotEmpty()
    @ValidateNested({ each: true })
@@ -71,7 +61,4 @@ export class CreateHomeDto {
    @IsArray()
    @IsString({ each: true })
    cooperates: string[];
-
-   @IsEnum(PropertyType)
-   propertyType: PropertyType;
 }
