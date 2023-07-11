@@ -50,8 +50,7 @@ export class HomeController {
    @Post()
    @UseInterceptors(new SnakeCaseInterceptor())
    createHome(@Body() body: CreateHomeDto) {
-      this.homeService.createHome(body);
-      return {};
+      return this.homeService.createHome(body);
    }
 
    @Put(":id")

@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+   BadRequestException,
+   Injectable,
+   InternalServerErrorException,
+   NotFoundException
+} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateHomeDto, GetHomeDto } from "./home.dto";
-import { PropertyType } from "@prisma/client";
+import { Prisma, PropertyType } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 
 type GetHomeFilter = {
@@ -69,27 +74,40 @@ export class HomeService {
    }
 
    async createHome(body: CreateHomeDto): Promise<CreateHomeDto> {
-      const { images, cooperates, ...homeData } = body;
+      const { images, cooperators, ...homeData } = body;
+      const realtors = [...cooperators.map((id) => ({ id }))];
 
-      const realtors = [...cooperates.map((id) => ({ id }))];
-
-      const home = await this.prismaService.home.create({
-         data: {
-            ...homeData,
-            realtors: {
-               connect: realtors
+      try {
+         const home = await this.prismaService.home.create({
+            data: {
+               ...homeData,
+               realtors: {
+                  connect: realtors
+               }
             }
+         });
+
+         const homeImages = images.map((image) => {
+            return { ...image, home_id: home.id };
+         });
+
+         await this.prismaService.image.createMany({
+            data: homeImages
+         });
+
+         return plainToInstance(CreateHomeDto, {
+            ...home,
+            images,
+            cooperators
+         });
+      } catch (error) {
+         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new BadRequestException("Invalid realtor id(s)");
+         } else {
+            throw new InternalServerErrorException(
+               "Something went REALLY wrong..."
+            );
          }
-      });
-
-      const homeImages = images.map((image) => {
-         return { ...image, home_id: home.id };
-      });
-
-      await this.prismaService.image.createMany({
-         data: homeImages
-      });
-
-      return plainToInstance(CreateHomeDto, { ...home, images, cooperates });
+      }
    }
 }

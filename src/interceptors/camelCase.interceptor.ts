@@ -4,19 +4,13 @@ import {
    Injectable,
    NestInterceptor
 } from "@nestjs/common";
-import { instanceToPlain } from "class-transformer";
 import { camelCase, isPlainObject, isArray } from "lodash";
 import { Observable, map } from "rxjs";
 
 @Injectable()
 export class CamelCaseInterceptor implements NestInterceptor {
    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-      return next.handle().pipe(
-         map((data) => {
-            const instance = instanceToPlain(data);
-            return this.transformToCamelCase(instance);
-         })
-      );
+      return next.handle().pipe(map((data) => this.transformToCamelCase(data)));
    }
 
    private transformToCamelCase(obj: any): any {

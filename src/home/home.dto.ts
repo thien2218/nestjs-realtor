@@ -60,5 +60,5 @@ export class CreateHomeDto {
 
    @IsArray()
    @IsString({ each: true })
-   cooperates: string[];
+   cooperators: string[];
 }
