@@ -10,6 +10,7 @@ import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { Prisma, User, UserRole } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
+import { UserInfo } from "src/utils/decorators/user.decorator";
 
 @Injectable()
 export class AuthService {
@@ -19,17 +20,21 @@ export class AuthService {
    ) {}
 
    private generateJwt(user: User) {
-      return jwt.sign(
-         {
-            id: user.id,
-            name: user.name,
-            email: user.email
-         },
-         this.configService.get("JWT_SECRET") as string,
-         {
-            expiresIn: 604800
-         }
-      );
+      const userInfo: UserInfo = {
+         id: user.id,
+         name: user.name,
+         email: user.email
+      };
+
+      return {
+         token: jwt.sign(
+            userInfo,
+            this.configService.get("JWT_SECRET") as string,
+            {
+               expiresIn: 604800
+            }
+         )
+      };
    }
 
    private async checkAccessKey(
@@ -56,7 +61,7 @@ export class AuthService {
    async signup(
       { accessKey, password, ...signup }: SignupDto,
       userRole: UserRole
-   ): Promise<string> {
+   ): Promise<{ token: string }> {
       const hashedPassword = await bcrypt.hash(password, 12);
       await this.checkAccessKey(userRole, signup.email, accessKey);
 
@@ -86,7 +91,7 @@ export class AuthService {
       }
    }
 
-   async signin({ email, password }: SigninDto): Promise<string> {
+   async signin({ email, password }: SigninDto): Promise<{ token: string }> {
       const user = await this.prismaService.user.findUnique({
          where: {
             email

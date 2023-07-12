@@ -20,6 +20,6 @@ async function bootstrap() {
       new CamelCaseInterceptor(),
       new ClassSerializerInterceptor(app.get(Reflector))
    );
-   await app.listen(3001);
+   await app.listen(3333);
 }
 bootstrap();

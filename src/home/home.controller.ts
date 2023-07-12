@@ -19,6 +19,7 @@ import { User, UserInfo } from "src/utils/decorators/user.decorator";
 export class HomeController {
    constructor(private readonly homeService: HomeService) {}
 
+   // GET /home
    @Get()
    getHomes(
       @Query("city") city?: string,
@@ -43,23 +44,26 @@ export class HomeController {
       return this.homeService.getHomes(filter);
    }
 
+   // GET /home/[id]
    @Get(":id")
-   getHomeById(@Param("id") id: string, @User() user: UserInfo) {
-      console.log(user);
+   getHomeById(@Param("id") id: string) {
       return this.homeService.getHomeById(id);
    }
 
+   // POST /home
    @Post()
    @UseInterceptors(new SnakeCaseInterceptor())
    createHome(@Body() body: CreateHomeDto) {
       return this.homeService.createHome(body);
    }
 
+   // PUT /home/[id]
    @Put(":id")
    updateHome(@Param("id") id: string) {
       return "Updated";
    }
 
+   // DELETE /home/[id]
    @Delete(":id")
    deleteHome(@Param("id") id: string) {
       return "Deleted";

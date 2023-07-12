@@ -7,6 +7,7 @@ import { UserRole } from "@prisma/client";
 export class AuthController {
    constructor(private readonly authService: AuthService) {}
 
+   // POST /auth/signup/[role]
    @Post("signup/:userRole")
    async signup(
       @Body() body: SignupDto,
@@ -15,11 +16,13 @@ export class AuthController {
       return this.authService.signup(body, userRole);
    }
 
+   // POST /auth/signin
    @Post("signin")
    signin(@Body() body: SigninDto) {
       return this.authService.signin(body);
    }
 
+   // POST /auth/key
    @Post("key")
    generateAccessKey(@Body() body: GenerateAccessKeyDto) {
       return this.authService.generateAccessKey(body);

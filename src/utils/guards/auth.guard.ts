@@ -1,23 +1,21 @@
 import { CanActivate, ExecutionContext } from "@nestjs/common";
-import { UserRole } from "@prisma/client";
 import * as jwt from "jsonwebtoken";
 import { ConfigService } from "@nestjs/config";
 import { UserInfo } from "../decorators/user.decorator";
 import { PrismaService } from "src/prisma/prisma.service";
+import { Reflector } from "@nestjs/core";
 
 export class AuthGuard implements CanActivate {
-   roles: UserRole[];
-
    constructor(
       private configService: ConfigService,
       private prismaService: PrismaService,
-      ...roles: UserRole[]
-   ) {
-      this.roles = roles;
-   }
+      private reflector: Reflector
+   ) {}
 
    async canActivate(ctx: ExecutionContext): Promise<boolean> {
-      if (this.roles) {
+      const roles = this.reflector.get<string[]>("roles", ctx.getHandler());
+
+      if (roles && roles.length) {
          const req = ctx.switchToHttp().getRequest();
          const authToken = req.headers.authorization?.split("Bearer ")[1];
 
@@ -33,7 +31,7 @@ export class AuthGuard implements CanActivate {
                }
             });
 
-            if (this.roles.includes(user.role)) {
+            if (roles.includes(user.role)) {
                return true;
             }
 
