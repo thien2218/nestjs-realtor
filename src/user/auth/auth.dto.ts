@@ -30,7 +30,7 @@ export class SignupDto {
 
    @IsString()
    @IsOptional()
-   accessKey?: string;
+   productKey?: string;
 }
 
 export class SigninDto {
@@ -45,7 +45,7 @@ export class SigninDto {
    password: string;
 }
 
-export class GenerateAccessKeyDto {
+export class GenerateProductKeyDto {
    @IsEmail()
    @IsNotEmpty()
    email: string;

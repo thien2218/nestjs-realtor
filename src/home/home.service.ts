@@ -20,7 +20,7 @@ type GetHomeFilter = {
 
 @Injectable()
 export class HomeService {
-   constructor(private readonly prismaService: PrismaService) {}
+   constructor(private prismaService: PrismaService) {}
 
    async getHomes(filter: GetHomeFilter): Promise<GetHomeDto[]> {
       const homes = await this.prismaService.home.findMany({

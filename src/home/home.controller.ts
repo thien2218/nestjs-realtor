@@ -17,7 +17,7 @@ import { User, UserInfo } from "src/utils/decorators/user.decorator";
 
 @Controller("home")
 export class HomeController {
-   constructor(private readonly homeService: HomeService) {}
+   constructor(private homeService: HomeService) {}
 
    // GET /home
    @Get()

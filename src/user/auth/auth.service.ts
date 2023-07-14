@@ -5,76 +5,45 @@ import {
    UnauthorizedException
 } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { GenerateAccessKeyDto, SigninDto, SignupDto } from "./auth.dto";
+import { GenerateProductKeyDto, SigninDto, SignupDto } from "./auth.dto";
 import * as bcrypt from "bcrypt";
-import * as jwt from "jsonwebtoken";
 import { Prisma, User, UserRole } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
 import { UserInfo } from "src/utils/decorators/user.decorator";
+import { JwtService } from "@nestjs/jwt";
+
+export type Tokens = {
+   accessToken: string;
+   refreshToken: string;
+};
 
 @Injectable()
 export class AuthService {
    constructor(
-      private readonly prismaService: PrismaService,
-      private configService: ConfigService
+      private prismaService: PrismaService,
+      private configService: ConfigService,
+      private jwtService: JwtService
    ) {}
 
-   private generateJwt(user: User) {
-      const userInfo: UserInfo = {
-         id: user.id,
-         name: user.name,
-         email: user.email
-      };
-
-      return {
-         token: jwt.sign(
-            userInfo,
-            this.configService.get("JWT_SECRET") as string,
-            {
-               expiresIn: 604800
-            }
-         )
-      };
-   }
-
-   private async checkAccessKey(
-      userRole: UserRole,
-      email: string,
-      accessKey: string | undefined
-   ) {
-      if (userRole != "BUYER") {
-         if (!accessKey) {
-            throw new UnauthorizedException();
-         }
-
-         const accessKeyStr = `${email}-${userRole}-${this.configService.get(
-            "ACCESS_KEY_SECRET"
-         )}`;
-         const isValidAccessKey = await bcrypt.compare(accessKeyStr, accessKey);
-
-         if (!isValidAccessKey) {
-            throw new UnauthorizedException();
-         }
-      }
-   }
-
    async signup(
-      { accessKey, password, ...signup }: SignupDto,
+      { productKey, password, ...signup }: SignupDto,
       userRole: UserRole
-   ): Promise<{ token: string }> {
+   ): Promise<Tokens> {
       const hashedPassword = await bcrypt.hash(password, 12);
-      await this.checkAccessKey(userRole, signup.email, accessKey);
+      await this.checkProductKey(userRole, signup.email, productKey);
 
       try {
          const user = await this.prismaService.user.create({
             data: {
                ...signup,
-               password: hashedPassword,
+               hashed_password: hashedPassword,
                role: userRole
             }
          });
 
-         return this.generateJwt(user);
+         const tokens = await this.generateJwt(user);
+         await this.updateRefreshToken(user.id, tokens.refreshToken);
+         return tokens;
       } catch (err) {
          if (
             err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -91,7 +60,7 @@ export class AuthService {
       }
    }
 
-   async signin({ email, password }: SigninDto): Promise<{ token: string }> {
+   async signin({ email, password }: SigninDto): Promise<Tokens> {
       const user = await this.prismaService.user.findUnique({
          where: {
             email
@@ -102,23 +71,80 @@ export class AuthService {
          throw new HttpException("Incorrect email or password", 400);
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(
+         password,
+         user.hashed_password
+      );
 
       if (!isValidPassword) {
          throw new HttpException("Incorrect email or password", 400);
       }
 
-      return this.generateJwt(user);
+      const tokens = await this.generateJwt(user);
+      await this.updateRefreshToken(user.id, tokens.refreshToken);
+      return tokens;
    }
 
-   generateAccessKey({
+   async generateProductKey({
       email,
       userRole
-   }: GenerateAccessKeyDto): Promise<string> {
+   }: GenerateProductKeyDto): Promise<string> {
       const accessStr = `${email}-${userRole}-${this.configService.get(
-         "ACCESS_KEY_SECRET"
+         "PRODUCT_KEY_SECRET"
       )}`;
 
       return bcrypt.hash(accessStr, 10);
+   }
+
+   private async generateJwt(user: User) {
+      const userInfo: UserInfo = {
+         id: user.id,
+         name: user.name,
+         email: user.email
+      };
+
+      const [accessToken, refreshToken] = await Promise.all([
+         this.jwtService.signAsync(userInfo),
+         this.jwtService.signAsync(userInfo, {
+            secret: this.configService.get("REFRESH_TOKEN_SECRET") as string,
+            expiresIn: 60 * 60 * 24 * 7
+         })
+      ]);
+
+      return { accessToken, refreshToken };
+   }
+
+   private async updateRefreshToken(userId: string, refreshToken: string) {
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+      await this.prismaService.user.update({
+         where: { id: userId },
+         data: { refresh_token: hashedRefreshToken }
+      });
+   }
+
+   private async checkProductKey(
+      userRole: UserRole,
+      email: string,
+      productKey: string | undefined
+   ) {
+      if (userRole != "BUYER") {
+         if (!productKey) {
+            throw new UnauthorizedException();
+         }
+
+         const productKeyStr = `${email}-${userRole}-${this.configService.get(
+            "PRODUCT_KEY_SECRET"
+         )}`;
+
+         const isValidProductKey = await bcrypt.compare(
+            productKeyStr,
+            productKey
+         );
+
+         if (!isValidProductKey) {
+            throw new UnauthorizedException();
+         }
+      }
    }
 }

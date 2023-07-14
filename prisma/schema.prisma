@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-   provider        = "prisma-client-js"
-   previewFeatures = ["jsonProtocol"]
+   provider = "prisma-client-js"
 }
 
 datasource db {
@@ -27,13 +26,16 @@ model User {
    name             String
    phone            String
    email            String    @unique
-   password         String
+   hashed_password  String
    created_at       DateTime  @default(now())
    updated_at       DateTime  @updatedAt
    role             UserRole
+   refresh_token    String?
    homes            Home[]
    realtor_messages Message[] @relation("realtor_messages")
    buyer_messages   Message[] @relation("buyer_messages")
+
+   @@map("users")
 }
 
 model Home {
@@ -51,14 +53,18 @@ model Home {
    images          Image[]
    realtors        User[]
    messages        Message[]
+
+   @@map("homes")
 }
 
 model Image {
    id         String   @id @default(cuid())
-   url        String
+   url        String   @unique
    created_at DateTime @default(now())
    home_id    String
    home       Home     @relation(fields: [home_id], references: [id])
+
+   @@map("images")
 }
 
 model Message {
@@ -71,4 +77,6 @@ model Message {
    realtor_messages User     @relation("realtor_messages", fields: [realtor_id], references: [id])
    buyer_id         String
    buyer_messages   User     @relation("buyer_messages", fields: [buyer_id], references: [id])
+
+   @@map("messages")
 }
