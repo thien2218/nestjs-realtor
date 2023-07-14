@@ -1,15 +1,18 @@
 import {
    Body,
    Controller,
+   Get,
    HttpCode,
    HttpStatus,
    Param,
    ParseEnumPipe,
-   Post
+   Post,
+   Res
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { GenerateProductKeyDto, SigninDto, SignupDto } from "./auth.dto";
 import { UserRole } from "@prisma/client";
+import { Response } from "express";
 
 @Controller("auth")
 export class AuthController {
@@ -20,15 +23,23 @@ export class AuthController {
    @Post("signup/:userRole")
    async signup(
       @Body() body: SignupDto,
-      @Param("userRole", new ParseEnumPipe(UserRole)) userRole: UserRole
+      @Param("userRole", new ParseEnumPipe(UserRole)) userRole: UserRole,
+      @Res() res: Response
    ) {
-      return this.authService.signup(body, userRole);
+      const { accessToken, refreshToken } = await this.authService.signup(
+         body,
+         userRole
+      );
+      res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
+      return { accessToken };
    }
 
    // POST /auth/signin
    @Post("signin")
-   signin(@Body() body: SigninDto) {
-      return this.authService.signin(body);
+   async signin(@Body() body: SigninDto, @Res() res: Response) {
+      const { accessToken, refreshToken } = await this.authService.signin(body);
+      res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
+      return { accessToken };
    }
 
    // POST /auth/key
@@ -36,4 +47,8 @@ export class AuthController {
    generateProductKey(@Body() body: GenerateProductKeyDto) {
       return this.authService.generateProductKey(body);
    }
+
+   // GET /auth/refresh
+   @Get("refresh")
+   async refresh() {}
 }

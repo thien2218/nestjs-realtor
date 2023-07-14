@@ -9,7 +9,7 @@ import { GenerateProductKeyDto, SigninDto, SignupDto } from "./auth.dto";
 import * as bcrypt from "bcrypt";
 import { Prisma, User, UserRole } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
-import { UserInfo } from "src/utils/decorators/user.decorator";
+import { JwtPayload } from "src/utils/decorators/user.decorator";
 import { JwtService } from "@nestjs/jwt";
 
 export type Tokens = {
@@ -41,7 +41,7 @@ export class AuthService {
             }
          });
 
-         const tokens = await this.generateJwt(user);
+         const tokens = await this.generateTokens(user);
          await this.updateRefreshToken(user.id, tokens.refreshToken);
          return tokens;
       } catch (err) {
@@ -80,7 +80,7 @@ export class AuthService {
          throw new HttpException("Incorrect email or password", 400);
       }
 
-      const tokens = await this.generateJwt(user);
+      const tokens = await this.generateTokens(user);
       await this.updateRefreshToken(user.id, tokens.refreshToken);
       return tokens;
    }
@@ -93,20 +93,21 @@ export class AuthService {
          "PRODUCT_KEY_SECRET"
       )}`;
 
-      return bcrypt.hash(accessStr, 10);
+      return bcrypt.hash(accessStr, 8);
    }
 
-   private async generateJwt(user: User) {
-      const userInfo: UserInfo = {
-         id: user.id,
+   private async generateTokens(user: User) {
+      const userInfo: JwtPayload = {
+         sub: user.id,
          name: user.name,
-         email: user.email
+         email: user.email,
+         phone: user.phone
       };
 
       const [accessToken, refreshToken] = await Promise.all([
          this.jwtService.signAsync(userInfo),
          this.jwtService.signAsync(userInfo, {
-            secret: this.configService.get("REFRESH_TOKEN_SECRET") as string,
+            secret: this.configService.get<string>("REFRESH_TOKEN_SECRET"),
             expiresIn: 60 * 60 * 24 * 7
          })
       ]);
@@ -115,7 +116,7 @@ export class AuthService {
    }
 
    private async updateRefreshToken(userId: string, refreshToken: string) {
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, 8);
 
       await this.prismaService.user.update({
          where: { id: userId },

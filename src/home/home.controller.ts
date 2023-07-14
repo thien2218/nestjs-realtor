@@ -13,7 +13,7 @@ import { HomeService } from "./home.service";
 import { CreateHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
 import { SnakeCaseInterceptor } from "src/utils/interceptors/snakeCase.interceptor";
-import { User, UserInfo } from "src/utils/decorators/user.decorator";
+import { User, JwtPayload } from "src/utils/decorators/user.decorator";
 
 @Controller("home")
 export class HomeController {
@@ -46,7 +46,8 @@ export class HomeController {
 
    // GET /home/[id]
    @Get(":id")
-   getHomeById(@Param("id") id: string) {
+   getHomeById(@Param("id") id: string, @User() user: JwtPayload) {
+      console.log(user);
       return this.homeService.getHomeById(id);
    }
 

@@ -1,9 +1,17 @@
 import { Module } from "@nestjs/common";
-import { PrismaModule } from "src/prisma/prisma.module";
 import { AuthModule } from "./auth/auth.module";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
-   imports: [PrismaModule, AuthModule],
+   imports: [
+      AuthModule,
+      JwtModule.register({
+         global: true,
+         signOptions: {
+            expiresIn: 60 * 60
+         }
+      })
+   ],
    controllers: [],
    providers: []
 })
