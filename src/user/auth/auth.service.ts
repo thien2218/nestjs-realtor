@@ -1,5 +1,6 @@
 import {
    ConflictException,
+   ForbiddenException,
    HttpException,
    Injectable,
    UnauthorizedException
@@ -9,7 +10,7 @@ import { GenerateProductKeyDto, SigninDto, SignupDto } from "./auth.dto";
 import * as bcrypt from "bcrypt";
 import { Prisma, User, UserRole } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
-import { JwtPayload } from "src/utils/decorators/user.decorator";
+import { UserPayload } from "src/utils/decorators/user.decorator";
 import { JwtService } from "@nestjs/jwt";
 
 export type Tokens = {
@@ -24,6 +25,8 @@ export class AuthService {
       private configService: ConfigService,
       private jwtService: JwtService
    ) {}
+
+   // PUBLIC
 
    async signup(
       { productKey, password, ...signup }: SignupDto,
@@ -96,8 +99,32 @@ export class AuthService {
       return bcrypt.hash(accessStr, 8);
    }
 
+   async refresh(userId: string, refreshToken: string): Promise<Tokens> {
+      const user = await this.prismaService.user.findUnique({
+         where: {
+            id: userId
+         }
+      });
+
+      if (!user || !user.refresh_token) {
+         throw new ForbiddenException("Access denied");
+      }
+
+      const isValidToken = bcrypt.compare(refreshToken, user.refresh_token);
+
+      if (!isValidToken) {
+         throw new ForbiddenException("Access denied");
+      }
+
+      const tokens = await this.generateTokens(user);
+      await this.updateRefreshToken(userId, refreshToken);
+      return tokens;
+   }
+
+   // PRIVATE
+
    private async generateTokens(user: User) {
-      const userInfo: JwtPayload = {
+      const payload: UserPayload = {
          sub: user.id,
          name: user.name,
          email: user.email,
@@ -106,10 +133,10 @@ export class AuthService {
       };
 
       const [accessToken, refreshToken] = await Promise.all([
-         this.jwtService.signAsync(userInfo, {
+         this.jwtService.signAsync(payload, {
             secret: this.configService.get<string>("ACCESS_TOKEN_SECRET")
          }),
-         this.jwtService.signAsync(userInfo, {
+         this.jwtService.signAsync(payload, {
             secret: this.configService.get<string>("REFRESH_TOKEN_SECRET"),
             expiresIn: 60 * 60 * 24 * 7
          })

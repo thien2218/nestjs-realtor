@@ -15,6 +15,7 @@ import { GenerateProductKeyDto, SigninDto, SignupDto } from "./auth.dto";
 import { UserRole } from "@prisma/client";
 import { Response } from "express";
 import { RefreshGuard } from "src/utils/guards/refresh.guard";
+import { UserPayload, User } from "src/utils/decorators/user.decorator";
 
 @Controller("auth")
 export class AuthController {
@@ -53,5 +54,12 @@ export class AuthController {
    // GET /auth/refresh
    @UseGuards(RefreshGuard)
    @Get("refresh")
-   async refresh() {}
+   async refresh(@Res() res: Response, @User() user: UserPayload) {
+      const { accessToken, refreshToken } = await this.authService.refresh(
+         user.sub,
+         user.refreshToken as string
+      );
+      res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
+      res.send({ accessToken });
+   }
 }
