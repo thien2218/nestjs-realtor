@@ -5,7 +5,7 @@ import {
    NotFoundException
 } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateHomeDto, GetHomeDto } from "./home.dto";
+import { HomeResponseDto, GetHomeDto, UpdateHomeDto } from "./home.dto";
 import { Prisma, PropertyType } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 
@@ -73,9 +73,12 @@ export class HomeService {
       return plainToInstance(GetHomeDto, home);
    }
 
-   async createHome(body: CreateHomeDto): Promise<CreateHomeDto> {
+   async createHome(
+      body: HomeResponseDto,
+      userId: string
+   ): Promise<HomeResponseDto> {
       const { images, cooperators, ...homeData } = body;
-      const realtors = [...cooperators.map((id) => ({ id }))];
+      const realtors = [...cooperators.map((id) => ({ id })), { id: userId }];
 
       try {
          const home = await this.prismaService.home.create({
@@ -95,7 +98,7 @@ export class HomeService {
             data: homeImages
          });
 
-         return plainToInstance(CreateHomeDto, {
+         return plainToInstance(HomeResponseDto, {
             ...home,
             images,
             cooperators
@@ -105,7 +108,60 @@ export class HomeService {
             throw new BadRequestException("Invalid realtor id(s)");
          } else {
             throw new InternalServerErrorException(
-               "Something went REALLY wrong..."
+               "Something went wrong. Please try again later"
+            );
+         }
+      }
+   }
+
+   async updateHome(
+      data: UpdateHomeDto,
+      homeId: string,
+      userId: string
+   ): Promise<HomeResponseDto> {
+      try {
+         const home = await this.prismaService.home.update({
+            where: {
+               id: homeId,
+               realtors: {
+                  some: { id: userId }
+               }
+            },
+            data
+         });
+
+         return plainToInstance(HomeResponseDto, home);
+      } catch (error) {
+         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new BadRequestException("Invalid home id");
+         } else {
+            throw new InternalServerErrorException(
+               "Something went wrong. Please try again later"
+            );
+         }
+      }
+   }
+
+   async deleteHome(homeId: string, userId: string): Promise<string> {
+      try {
+         const home = await this.prismaService.home.delete({
+            where: {
+               id: homeId,
+               realtors: {
+                  some: {
+                     id: userId
+                  }
+               }
+            }
+         });
+
+         return home.id;
+      } catch (error) {
+         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new BadRequestException("Invalid home id");
+         } else {
+            throw new InternalServerErrorException(
+               "Something went wrong. Please try again later"
             );
          }
       }

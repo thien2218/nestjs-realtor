@@ -10,7 +10,7 @@ import {
    UseInterceptors
 } from "@nestjs/common";
 import { HomeService } from "./home.service";
-import { CreateHomeDto } from "./home.dto";
+import { HomeResponseDto, UpdateHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
 import { SnakeCaseInterceptor } from "src/utils/interceptors/snakeCase.interceptor";
 import { User, UserPayload } from "src/utils/decorators/user.decorator";
@@ -55,21 +55,25 @@ export class HomeController {
    @Post()
    @Roles("REALTOR")
    @UseInterceptors(new SnakeCaseInterceptor())
-   createHome(@Body() body: CreateHomeDto) {
-      return this.homeService.createHome(body);
+   createHome(@Body() body: HomeResponseDto, @User() user: UserPayload) {
+      return this.homeService.createHome(body, user.sub);
    }
 
    // PUT /home/[id]
    @Put(":id")
    @Roles("REALTOR")
-   updateHome(@Param("id") id: string) {
-      return "Updated";
+   updateHome(
+      @Body() body: UpdateHomeDto,
+      @Param("id") id: string,
+      @User() user: UserPayload
+   ) {
+      return this.homeService.updateHome(body, id, user.sub);
    }
 
    // DELETE /home/[id]
    @Delete(":id")
    @Roles("REALTOR", "ADMIN")
-   deleteHome(@Param("id") id: string) {
-      return "Deleted";
+   deleteHome(@Param("id") id: string, @User() user: UserPayload) {
+      return this.homeService.deleteHome(id, user.sub);
    }
 }

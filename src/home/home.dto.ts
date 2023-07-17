@@ -1,3 +1,4 @@
+import { OmitType, PartialType } from "@nestjs/swagger";
 import { PropertyType } from "@prisma/client";
 import { Exclude, Type } from "class-transformer";
 import {
@@ -25,7 +26,7 @@ class HomeImage {
    url: string;
 }
 
-export class CreateHomeDto {
+export class HomeResponseDto {
    @IsString()
    @IsNotEmpty()
    title: string;
@@ -62,3 +63,7 @@ export class CreateHomeDto {
    @IsString({ each: true })
    cooperators: string[];
 }
+
+export class UpdateHomeDto extends PartialType(
+   OmitType(HomeResponseDto, ["images"] as const)
+) {}

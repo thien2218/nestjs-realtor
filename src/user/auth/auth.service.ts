@@ -26,8 +26,6 @@ export class AuthService {
       private jwtService: JwtService
    ) {}
 
-   // PUBLIC
-
    async signup(
       { productKey, password, ...signup }: SignupDto,
       userRole: UserRole
@@ -121,7 +119,7 @@ export class AuthService {
       return tokens;
    }
 
-   // PRIVATE
+   // HELPER FUNCTIONS
 
    private async generateTokens(user: User) {
       const payload: UserPayload = {
