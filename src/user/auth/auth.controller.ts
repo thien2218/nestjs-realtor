@@ -7,12 +7,14 @@ import {
    Param,
    ParseEnumPipe,
    Post,
-   Res
+   Res,
+   UseGuards
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { GenerateProductKeyDto, SigninDto, SignupDto } from "./auth.dto";
 import { UserRole } from "@prisma/client";
 import { Response } from "express";
+import { RefreshGuard } from "src/utils/guards/refresh.guard";
 
 @Controller("auth")
 export class AuthController {
@@ -31,7 +33,7 @@ export class AuthController {
          userRole
       );
       res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
-      return { accessToken };
+      res.send({ accessToken });
    }
 
    // POST /auth/signin
@@ -39,7 +41,7 @@ export class AuthController {
    async signin(@Body() body: SigninDto, @Res() res: Response) {
       const { accessToken, refreshToken } = await this.authService.signin(body);
       res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
-      return { accessToken };
+      res.send({ accessToken });
    }
 
    // POST /auth/key
@@ -49,6 +51,7 @@ export class AuthController {
    }
 
    // GET /auth/refresh
+   @UseGuards(RefreshGuard)
    @Get("refresh")
    async refresh() {}
 }
