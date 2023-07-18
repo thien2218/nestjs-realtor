@@ -142,9 +142,9 @@ export class HomeService {
       }
    }
 
-   async delete(homeId: string, userId: string): Promise<string> {
+   async deleteById(homeId: string, userId: string): Promise<string> {
       try {
-         const home = await this.prismaService.home.delete({
+         const home = await this.prismaService.home.deleteById({
             where: {
                id: homeId,
                realtors: {

@@ -3,6 +3,8 @@ import {
    Controller,
    Delete,
    Get,
+   HttpCode,
+   HttpStatus,
    Param,
    Post,
    Put,
@@ -52,6 +54,7 @@ export class HomeController {
    }
 
    // POST /home
+   @HttpCode(HttpStatus.CREATED)
    @Post()
    @Roles("REALTOR")
    @UseInterceptors(new SnakeCaseInterceptor())
@@ -71,9 +74,10 @@ export class HomeController {
    }
 
    // DELETE /home/[id]
+   @HttpCode(HttpStatus.NO_CONTENT)
    @Delete(":id")
    @Roles("REALTOR", "ADMIN")
-   delete(@Param("id") id: string, @User() user: UserPayload) {
-      return this.homeService.delete(id, user.sub);
+   deleteById(@Param("id") id: string, @User() user: UserPayload) {
+      return this.homeService.deleteById(id, user.sub);
    }
 }

@@ -6,5 +6,5 @@ export class CreateImageDto {
 
    @IsString()
    @IsNotEmpty()
-   homeId: string;
+   home_id: string;
 }
