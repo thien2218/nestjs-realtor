@@ -9,7 +9,7 @@ import {
    HttpStatus
 } from "@nestjs/common";
 import { ImageService } from "./image.service";
-import { CreateImageDto } from "./dto/create-image.dto";
+import { ImageResponseDto } from "./dto/create-image.dto";
 import { UpdateImageDto } from "./dto/update-image.dto";
 import { CreateImagesDto } from "./dto/create-images.dto";
 
@@ -19,7 +19,7 @@ export class ImageController {
 
    @HttpCode(HttpStatus.CREATED)
    @Post()
-   create(@Body() createImageDto: CreateImageDto) {
+   create(@Body() createImageDto: ImageResponseDto) {
       return this.imageService.create(createImageDto);
    }
 

@@ -1,6 +1,6 @@
 import { OmitType } from "@nestjs/swagger";
-import { CreateImageDto } from "./create-image.dto";
+import { ImageResponseDto } from "./create-image.dto";
 
-export class UpdateImageDto extends OmitType(CreateImageDto, [
+export class UpdateImageDto extends OmitType(ImageResponseDto, [
    "home_id"
 ] as const) {}

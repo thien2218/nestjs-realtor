@@ -144,7 +144,7 @@ export class HomeService {
 
    async deleteById(homeId: string, userId: string): Promise<string> {
       try {
-         const home = await this.prismaService.home.deleteById({
+         await this.prismaService.home.delete({
             where: {
                id: homeId,
                realtors: {
@@ -155,7 +155,7 @@ export class HomeService {
             }
          });
 
-         return home.id;
+         return "Home successfully deleted";
       } catch (error) {
          if (error instanceof Prisma.PrismaClientKnownRequestError) {
             throw new BadRequestException("Invalid home id");
