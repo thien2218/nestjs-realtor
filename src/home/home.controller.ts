@@ -12,7 +12,7 @@ import {
 import { HomeService } from "./home.service";
 import { HomeResponseDto, UpdateHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
-import { SnakeCaseInterceptor } from "src/utils/interceptors/snakeCase.interceptor";
+import { SnakeCaseInterceptor } from "src/utils/interceptors/snake-case.interceptor";
 import { User, UserPayload } from "src/utils/decorators/user.decorator";
 import { Roles } from "src/utils/decorators/roles.decorator";
 
@@ -20,9 +20,9 @@ import { Roles } from "src/utils/decorators/roles.decorator";
 export class HomeController {
    constructor(private homeService: HomeService) {}
 
-   // GET /home
+   // GET /home?[...queries]
    @Get()
-   getHomes(
+   findAll(
       @Query("city") city?: string,
       @Query("minPrice") minPrice?: string,
       @Query("maxPrice") maxPrice?: string,
@@ -42,38 +42,38 @@ export class HomeController {
          ...(propertyType && { property_type: propertyType })
       };
 
-      return this.homeService.getHomes(filter);
+      return this.homeService.findAll(filter);
    }
 
    // GET /home/[id]
    @Get(":id")
-   getHomeById(@Param("id") id: string) {
-      return this.homeService.getHomeById(id);
+   findOneById(@Param("id") id: string) {
+      return this.homeService.findOneById(id);
    }
 
    // POST /home
    @Post()
    @Roles("REALTOR")
    @UseInterceptors(new SnakeCaseInterceptor())
-   createHome(@Body() body: HomeResponseDto, @User() user: UserPayload) {
-      return this.homeService.createHome(body, user.sub);
+   create(@Body() body: HomeResponseDto, @User() user: UserPayload) {
+      return this.homeService.create(body, user.sub);
    }
 
    // PUT /home/[id]
    @Put(":id")
    @Roles("REALTOR")
-   updateHome(
+   update(
       @Body() body: UpdateHomeDto,
       @Param("id") id: string,
       @User() user: UserPayload
    ) {
-      return this.homeService.updateHome(body, id, user.sub);
+      return this.homeService.update(body, id, user.sub);
    }
 
    // DELETE /home/[id]
    @Delete(":id")
    @Roles("REALTOR", "ADMIN")
-   deleteHome(@Param("id") id: string, @User() user: UserPayload) {
-      return this.homeService.deleteHome(id, user.sub);
+   delete(@Param("id") id: string, @User() user: UserPayload) {
+      return this.homeService.delete(id, user.sub);
    }
 }

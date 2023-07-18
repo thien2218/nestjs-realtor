@@ -22,7 +22,7 @@ type GetHomeFilter = {
 export class HomeService {
    constructor(private prismaService: PrismaService) {}
 
-   async getHomes(filter: GetHomeFilter): Promise<GetHomeDto[]> {
+   async findAll(filter: GetHomeFilter): Promise<GetHomeDto[]> {
       const homes = await this.prismaService.home.findMany({
          include: {
             images: {
@@ -46,7 +46,7 @@ export class HomeService {
       });
    }
 
-   async getHomeById(id: string): Promise<GetHomeDto> {
+   async findOneById(id: string): Promise<GetHomeDto> {
       const home = await this.prismaService.home.findUnique({
          include: {
             images: {
@@ -73,7 +73,7 @@ export class HomeService {
       return plainToInstance(GetHomeDto, home);
    }
 
-   async createHome(
+   async create(
       body: HomeResponseDto,
       userId: string
    ): Promise<HomeResponseDto> {
@@ -114,7 +114,7 @@ export class HomeService {
       }
    }
 
-   async updateHome(
+   async update(
       data: UpdateHomeDto,
       homeId: string,
       userId: string
@@ -142,7 +142,7 @@ export class HomeService {
       }
    }
 
-   async deleteHome(homeId: string, userId: string): Promise<string> {
+   async delete(homeId: string, userId: string): Promise<string> {
       try {
          const home = await this.prismaService.home.delete({
             where: {

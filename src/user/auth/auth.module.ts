@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { PrismaModule } from "src/prisma/prisma.module";
-import { JwtStrategy } from "./strategies/accessToken.strategy";
-import { RefreshStrategy } from "./strategies/refreshToken.strategy";
+import { JwtStrategy } from "./strategies/access-token.strategy";
+import { RefreshStrategy } from "./strategies/refresh-token.strategy";
 
 @Module({
    imports: [PrismaModule],

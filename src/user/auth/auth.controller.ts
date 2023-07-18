@@ -33,7 +33,12 @@ export class AuthController {
          body,
          userRole
       );
-      res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
+
+      res.cookie("realtor-refresh-token", refreshToken, {
+         httpOnly: true,
+         path: "/refresh"
+      });
+
       res.send({ accessToken });
    }
 
@@ -41,7 +46,12 @@ export class AuthController {
    @Post("signin")
    async signin(@Body() body: SigninDto, @Res() res: Response) {
       const { accessToken, refreshToken } = await this.authService.signin(body);
-      res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
+
+      res.cookie("realtor-refresh-token", refreshToken, {
+         httpOnly: true,
+         path: "/refresh"
+      });
+
       res.send({ accessToken });
    }
 
@@ -59,7 +69,12 @@ export class AuthController {
          user.sub,
          user.refreshToken as string
       );
-      res.cookie("REFRESH_TOKEN", refreshToken, { httpOnly: true });
+
+      res.cookie("realtor-refresh-token", refreshToken, {
+         httpOnly: true,
+         path: "/refresh"
+      });
+
       res.send({ accessToken });
    }
 }
