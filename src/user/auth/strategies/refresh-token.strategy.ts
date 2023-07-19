@@ -10,7 +10,11 @@ export class RefreshStrategy extends PassportStrategy(Strategy, "refresh") {
       super({
          jwtFromRequest: ExtractJwt.fromExtractors([
             (req: Request) => {
-               return req.cookies?.REFRESH_TOKEN;
+               if (req.cookies) {
+                  return req.cookies["realtor-refresh-token"];
+               } else {
+                  return null;
+               }
             }
          ]),
          secretOrKey: configService.get<string>("REFRESH_TOKEN_SECRET"),
@@ -19,10 +23,9 @@ export class RefreshStrategy extends PassportStrategy(Strategy, "refresh") {
    }
 
    async validate(req: Request, payload: any) {
-      const refreshToken = req.cookies?.REFRESH_TOKEN;
       return {
          ...payload,
-         refreshToken
+         refresh_token: req.cookies["realtor-refresh-token"]
       };
    }
 }

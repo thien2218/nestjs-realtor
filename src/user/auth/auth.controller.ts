@@ -67,7 +67,7 @@ export class AuthController {
    async refresh(@Res() res: Response, @User() user: UserPayload) {
       const { accessToken, refreshToken } = await this.authService.refresh(
          user.sub,
-         user.refreshToken as string
+         user.refresh_token as string
       );
 
       res.cookie("realtor-refresh-token", refreshToken, {

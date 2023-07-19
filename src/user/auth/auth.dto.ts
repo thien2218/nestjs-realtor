@@ -13,7 +13,11 @@ import {
 export class SignupDto {
    @IsString()
    @IsNotEmpty()
-   name: string;
+   first_name: string;
+
+   @IsString()
+   @IsNotEmpty()
+   last_name: string;
 
    @Matches(/^(\+\d{1,3}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/)
    phone: string;

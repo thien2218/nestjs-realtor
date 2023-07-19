@@ -3,12 +3,12 @@ import { UserRole } from "@prisma/client";
 
 export type UserPayload = {
    sub: string;
-   name: string;
+   full_name: string;
    email: string;
    phone: string;
    role: UserRole;
    // Only appear upon refresh requests
-   refreshToken?: string;
+   refresh_token?: string;
 };
 
 export const User = createParamDecorator((_, ctx: ExecutionContext) => {
