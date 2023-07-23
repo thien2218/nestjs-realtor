@@ -1,12 +1,11 @@
 import {
    BadRequestException,
    Injectable,
-   InternalServerErrorException,
    NotFoundException
 } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { HomeResponseDto, GetHomeDto, UpdateHomeDto } from "./home.dto";
-import { Prisma, PropertyType } from "@prisma/client";
+import { PropertyType } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 
 type GetHomeFilter = {
@@ -57,7 +56,8 @@ export class HomeService {
             realtors: {
                select: {
                   id: true,
-                  name: true,
+                  first_name: true,
+                  last_name: true,
                   phone: true,
                   email: true
                }
@@ -104,13 +104,7 @@ export class HomeService {
             cooperators
          });
       } catch (err) {
-         if (err instanceof Prisma.PrismaClientKnownRequestError) {
-            throw new BadRequestException("Invalid realtor id(s)");
-         } else {
-            throw new InternalServerErrorException(
-               "Something went wrong. Please try again later"
-            );
-         }
+         throw new BadRequestException("Invalid realtor id(s)");
       }
    }
 
@@ -132,13 +126,7 @@ export class HomeService {
 
          return plainToInstance(HomeResponseDto, home);
       } catch (err) {
-         if (err instanceof Prisma.PrismaClientKnownRequestError) {
-            throw new BadRequestException("Invalid home id");
-         } else {
-            throw new InternalServerErrorException(
-               "Something went wrong. Please try again later"
-            );
-         }
+         throw new BadRequestException("Invalid home id");
       }
    }
 
@@ -157,13 +145,7 @@ export class HomeService {
 
          return "Home successfully deleted";
       } catch (err) {
-         if (err instanceof Prisma.PrismaClientKnownRequestError) {
-            throw new BadRequestException("Invalid home id");
-         } else {
-            throw new InternalServerErrorException(
-               "Something went wrong. Please try again later"
-            );
-         }
+         throw new BadRequestException("Invalid home id");
       }
    }
 }

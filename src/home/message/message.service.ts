@@ -1,8 +1,7 @@
 import {
    BadRequestException,
    Injectable,
-   NotFoundException,
-   UnauthorizedException
+   NotFoundException
 } from "@nestjs/common";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -45,23 +44,20 @@ export class MessageService {
       messageId: string,
       homeId: string
    ): Promise<string> {
-      const message = await this.prismaService.message.findUnique({
-         where: {
-            id: messageId,
-            home_id: homeId
-         }
-      });
+      try {
+         await this.prismaService.message.delete({
+            where: {
+               id: messageId,
+               home_id: homeId,
+               from: userId
+            }
+         });
 
-      if (!message) {
-         throw new BadRequestException("No message found");
-      } else if (message.from !== userId) {
-         throw new UnauthorizedException();
+         return "Message deleted successfully";
+      } catch (err) {
+         throw new BadRequestException(
+            "Message not found in with the given home id"
+         );
       }
-
-      await this.prismaService.message.delete({
-         where: { id: messageId }
-      });
-
-      return "Message deleted successfully";
    }
 }
