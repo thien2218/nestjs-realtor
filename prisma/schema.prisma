@@ -22,19 +22,19 @@ enum PropertyType {
 }
 
 model User {
-   id               String    @id @default(cuid())
-   first_name       String
-   last_name        String
-   phone            String
-   email            String    @unique
-   hashed_password  String
-   created_at       DateTime  @default(now())
-   updated_at       DateTime  @updatedAt
-   role             UserRole
-   refresh_token    String?
-   homes            Home[]
-   realtor_messages Message[] @relation("realtor_messages")
-   buyer_messages   Message[] @relation("buyer_messages")
+   id              String    @id @default(cuid())
+   first_name      String
+   last_name       String
+   phone           String
+   email           String    @unique
+   hashed_password String
+   created_at      DateTime  @default(now())
+   updated_at      DateTime  @updatedAt
+   role            UserRole
+   refresh_token   String?
+   homes           Home[]
+   from_messages   Message[] @relation("from_messages")
+   to_messages     Message[] @relation("to_messages")
 
    @@map("users")
 }
@@ -69,15 +69,15 @@ model Image {
 }
 
 model Message {
-   id               String   @id @default(cuid())
-   text             String
-   created_at       DateTime @default(now())
-   home_id          String
-   home             Home     @relation(fields: [home_id], references: [id])
-   realtor_id       String
-   realtor_messages User     @relation("realtor_messages", fields: [realtor_id], references: [id])
-   buyer_id         String
-   buyer_messages   User     @relation("buyer_messages", fields: [buyer_id], references: [id])
+   id            String   @id @default(cuid())
+   text          String
+   created_at    DateTime @default(now())
+   home_id       String
+   home          Home     @relation(fields: [home_id], references: [id])
+   from          String
+   from_messages User     @relation("from_messages", fields: [from], references: [id])
+   to            String
+   to_messages   User     @relation("to_messages", fields: [to], references: [id])
 
    @@map("messages")
 }

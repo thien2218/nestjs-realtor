@@ -1,29 +1,67 @@
-import { Injectable } from "@nestjs/common";
+import {
+   BadRequestException,
+   Injectable,
+   NotFoundException,
+   UnauthorizedException
+} from "@nestjs/common";
 import { CreateMessageDto } from "./dto/create-message.dto";
-import { UpdateMessageDto } from "./dto/update-message.dto";
 import { PrismaService } from "src/prisma/prisma.service";
+import { plainToInstance } from "class-transformer";
 
 @Injectable()
 export class MessageService {
    constructor(private prismaService: PrismaService) {}
 
-   async create(createMessageDto: CreateMessageDto) {
-      return "This action adds a new message";
+   async create(
+      createMessageDto: CreateMessageDto,
+      homeId: string
+   ): Promise<CreateMessageDto> {
+      const message = await this.prismaService.message.create({
+         data: {
+            ...createMessageDto,
+            home_id: homeId
+         }
+      });
+
+      return plainToInstance(CreateMessageDto, message);
    }
 
-   async findAll() {
-      return `This action returns all message`;
+   async findAll(homeId: string): Promise<CreateMessageDto[]> {
+      const messages = await this.prismaService.message.findMany({
+         where: { home_id: homeId }
+      });
+
+      if (!messages) {
+         throw new NotFoundException();
+      }
+
+      return messages.map((message) =>
+         plainToInstance(CreateMessageDto, message)
+      );
    }
 
-   async findOneById(id: string) {
-      return `This action returns a #${id} message`;
-   }
+   async deleteById(
+      userId: string,
+      messageId: string,
+      homeId: string
+   ): Promise<string> {
+      const message = await this.prismaService.message.findUnique({
+         where: {
+            id: messageId,
+            home_id: homeId
+         }
+      });
 
-   async update(id: string, updateMessageDto: UpdateMessageDto) {
-      return `This action updates a #${id} message`;
-   }
+      if (!message) {
+         throw new BadRequestException("No message found");
+      } else if (message.from !== userId) {
+         throw new UnauthorizedException();
+      }
 
-   async deleteById(id: string) {
-      return `This action removes a #${id} message`;
+      await this.prismaService.message.delete({
+         where: { id: messageId }
+      });
+
+      return "Message deleted successfully";
    }
 }

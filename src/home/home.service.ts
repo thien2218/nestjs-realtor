@@ -103,8 +103,8 @@ export class HomeService {
             images,
             cooperators
          });
-      } catch (error) {
-         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      } catch (err) {
+         if (err instanceof Prisma.PrismaClientKnownRequestError) {
             throw new BadRequestException("Invalid realtor id(s)");
          } else {
             throw new InternalServerErrorException(
@@ -131,8 +131,8 @@ export class HomeService {
          });
 
          return plainToInstance(HomeResponseDto, home);
-      } catch (error) {
-         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      } catch (err) {
+         if (err instanceof Prisma.PrismaClientKnownRequestError) {
             throw new BadRequestException("Invalid home id");
          } else {
             throw new InternalServerErrorException(
@@ -156,8 +156,8 @@ export class HomeService {
          });
 
          return "Home successfully deleted";
-      } catch (error) {
-         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      } catch (err) {
+         if (err instanceof Prisma.PrismaClientKnownRequestError) {
             throw new BadRequestException("Invalid home id");
          } else {
             throw new InternalServerErrorException(

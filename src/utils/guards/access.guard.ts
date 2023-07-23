@@ -13,8 +13,11 @@ export class AccessGuard extends AuthGuard("jwt") {
       super();
    }
 
-   handleRequest(err: any, user: any, info: any, ctx: ExecutionContext) {
-      const roles = this.reflector.get<UserRole[]>("roles", ctx.getHandler());
+   handleRequest(err: any, user: any, _: any, ctx: ExecutionContext) {
+      const roles = this.reflector.getAllAndOverride<UserRole[]>("roles", [
+         ctx.getHandler(),
+         ctx.getClass()
+      ]);
 
       if (!roles) {
          return user;

@@ -1,9 +1,10 @@
 import {
    BadRequestException,
    Injectable,
-   InternalServerErrorException
+   InternalServerErrorException,
+   UnauthorizedException
 } from "@nestjs/common";
-import { ImageResponseDto } from "./dto/create-image.dto";
+import { CreateImageDto } from "./dto/create-image.dto";
 import { UpdateImageDto } from "./dto/update-image.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { plainToInstance } from "class-transformer";
@@ -14,18 +15,57 @@ import { CreateImagesDto } from "./dto/create-images.dto";
 export class ImageService {
    constructor(private prismaService: PrismaService) {}
 
-   async create(createImageDto: ImageResponseDto): Promise<ImageResponseDto> {
-      const image = await this.prismaService.image.create({
-         data: createImageDto
+   private async homeOwnedByRealtor(
+      homeId: string,
+      realtorId: string
+   ): Promise<boolean> {
+      const home = await this.prismaService.home.findUnique({
+         where: { id: homeId },
+         include: { realtors: true }
       });
 
-      return plainToInstance(ImageResponseDto, image);
+      if (!home) {
+         throw new Error("Home not found");
+      }
+
+      return home.realtors.some((realtor) => realtor.id === realtorId);
    }
 
-   async createMany(createImagesDto: CreateImagesDto): Promise<string> {
+   async create(
+      url: string,
+      homeId: string,
+      userId: string
+   ): Promise<CreateImageDto> {
+      const validRealtor = await this.homeOwnedByRealtor(homeId, userId);
+
+      if (!validRealtor) {
+         throw new UnauthorizedException();
+      }
+
+      const image = await this.prismaService.image.create({
+         data: {
+            url,
+            home_id: homeId
+         }
+      });
+
+      return plainToInstance(CreateImageDto, image);
+   }
+
+   async createMany(
+      createImagesDto: CreateImagesDto,
+      homeId: string,
+      userId: string
+   ): Promise<string> {
+      const validRealtor = await this.homeOwnedByRealtor(homeId, userId);
+
+      if (!validRealtor) {
+         throw new UnauthorizedException();
+      }
+
       const images = createImagesDto.urls.map((url) => ({
          url,
-         home_id: createImagesDto.home_id
+         home_id: homeId
       }));
 
       const result = await this.prismaService.image.createMany({
@@ -40,19 +80,29 @@ export class ImageService {
    }
 
    async update(
-      id: string,
-      updateImageDto: UpdateImageDto
-   ): Promise<ImageResponseDto> {
+      updateImageDto: UpdateImageDto,
+      imageId: string,
+      homeId: string,
+      userId: string
+   ): Promise<CreateImageDto> {
       try {
+         const validRealtor = await this.homeOwnedByRealtor(homeId, userId);
+
+         if (!validRealtor) {
+            throw new UnauthorizedException();
+         }
+
          const image = await this.prismaService.image.update({
-            where: { id },
+            where: { id: imageId, home_id: homeId },
             data: updateImageDto
          });
 
-         return plainToInstance(ImageResponseDto, image);
-      } catch (error) {
-         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            throw new BadRequestException("Invalid home id");
+         return plainToInstance(CreateImageDto, image);
+      } catch (err) {
+         if (err instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new BadRequestException(
+               "Image not found in with the given home id"
+            );
          } else {
             throw new InternalServerErrorException(
                "Something went wrong. Please try again later"
@@ -61,16 +111,28 @@ export class ImageService {
       }
    }
 
-   async deleteById(id: string): Promise<string> {
+   async deleteById(
+      imageId: string,
+      homeId: string,
+      userId: string
+   ): Promise<string> {
       try {
+         const validRealtor = await this.homeOwnedByRealtor(homeId, userId);
+
+         if (!validRealtor) {
+            throw new UnauthorizedException();
+         }
+
          await this.prismaService.image.delete({
-            where: { id }
+            where: { id: imageId, home_id: homeId }
          });
 
-         return "Successfully deleted image";
-      } catch (error) {
-         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            throw new BadRequestException("Invalid home id");
+         return "Image deleted successfully";
+      } catch (err) {
+         if (err instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new BadRequestException(
+               "Image not found in with the given home id"
+            );
          } else {
             throw new InternalServerErrorException(
                "Something went wrong. Please try again later"
