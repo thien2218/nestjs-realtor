@@ -12,11 +12,12 @@ import {
    UseInterceptors
 } from "@nestjs/common";
 import { HomeService } from "./home.service";
-import { HomeResponseDto, UpdateHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
 import { SnakeCaseInterceptor } from "src/utils/interceptors/snake-case.interceptor";
 import { User, UserPayload } from "src/utils/decorators/user.decorator";
 import { Roles } from "src/utils/decorators/roles.decorator";
+import { CreateHomeDto } from "./dto/create-home.dto";
+import { UpdateHomeDto } from "./dto/update-home.dto";
 
 @Controller("home")
 export class HomeController {
@@ -58,7 +59,7 @@ export class HomeController {
    @Post()
    @Roles("REALTOR")
    @UseInterceptors(new SnakeCaseInterceptor())
-   create(@Body() body: HomeResponseDto, @User() user: UserPayload) {
+   create(@Body() body: CreateHomeDto, @User() user: UserPayload) {
       return this.homeService.create(body, user.sub);
    }
 

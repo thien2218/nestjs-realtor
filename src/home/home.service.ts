@@ -4,9 +4,11 @@ import {
    NotFoundException
 } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { HomeResponseDto, GetHomeDto, UpdateHomeDto } from "./home.dto";
 import { PropertyType } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
+import { HomeResponseDto } from "./dto/home-response.dto";
+import { CreateHomeDto } from "./dto/create-home.dto";
+import { UpdateHomeDto } from "./dto/update-home.dto";
 
 type GetHomeFilter = {
    city?: string;
@@ -21,7 +23,7 @@ type GetHomeFilter = {
 export class HomeService {
    constructor(private prismaService: PrismaService) {}
 
-   async findAll(filter: GetHomeFilter): Promise<GetHomeDto[]> {
+   async findAll(filter: GetHomeFilter): Promise<HomeResponseDto[]> {
       const homes = await this.prismaService.home.findMany({
          include: {
             images: {
@@ -41,11 +43,11 @@ export class HomeService {
       return homes.map((data) => {
          const { images, ...homeData } = data;
          const home = { ...homeData, image: images[0].url };
-         return plainToInstance(GetHomeDto, home);
+         return plainToInstance(HomeResponseDto, home);
       });
    }
 
-   async findOneById(id: string): Promise<GetHomeDto> {
+   async findOneById(id: string): Promise<HomeResponseDto> {
       const home = await this.prismaService.home.findUnique({
          include: {
             images: {
@@ -53,15 +55,7 @@ export class HomeService {
                   url: true
                }
             },
-            realtors: {
-               select: {
-                  id: true,
-                  first_name: true,
-                  last_name: true,
-                  phone: true,
-                  email: true
-               }
-            }
+            realtors: true
          },
          where: { id }
       });
@@ -70,13 +64,10 @@ export class HomeService {
          throw new NotFoundException("No homes matched");
       }
 
-      return plainToInstance(GetHomeDto, home);
+      return plainToInstance(HomeResponseDto, home);
    }
 
-   async create(
-      body: HomeResponseDto,
-      userId: string
-   ): Promise<HomeResponseDto> {
+   async create(body: CreateHomeDto, userId: string): Promise<CreateHomeDto> {
       const { images, cooperators, ...homeData } = body;
       const realtors = [...cooperators.map((id) => ({ id })), { id: userId }];
 
@@ -98,7 +89,7 @@ export class HomeService {
             data: homeImages
          });
 
-         return plainToInstance(HomeResponseDto, {
+         return plainToInstance(CreateHomeDto, {
             ...home,
             images,
             cooperators
@@ -112,7 +103,7 @@ export class HomeService {
       data: UpdateHomeDto,
       homeId: string,
       userId: string
-   ): Promise<HomeResponseDto> {
+   ): Promise<CreateHomeDto> {
       try {
          const home = await this.prismaService.home.update({
             where: {
@@ -124,7 +115,7 @@ export class HomeService {
             data
          });
 
-         return plainToInstance(HomeResponseDto, home);
+         return plainToInstance(CreateHomeDto, home);
       } catch (err) {
          throw new BadRequestException("Invalid home id");
       }

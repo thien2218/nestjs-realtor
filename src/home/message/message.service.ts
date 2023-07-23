@@ -6,6 +6,7 @@ import {
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { plainToInstance } from "class-transformer";
+import { MessageResponseDto } from "./dto/message-response.dto";
 
 @Injectable()
 export class MessageService {
@@ -14,18 +15,22 @@ export class MessageService {
    async create(
       createMessageDto: CreateMessageDto,
       homeId: string
-   ): Promise<CreateMessageDto> {
+   ): Promise<MessageResponseDto> {
       const message = await this.prismaService.message.create({
          data: {
             ...createMessageDto,
             home_id: homeId
+         },
+         include: {
+            sender: true,
+            receiver: true
          }
       });
 
-      return plainToInstance(CreateMessageDto, message);
+      return plainToInstance(MessageResponseDto, message);
    }
 
-   async findAll(homeId: string): Promise<CreateMessageDto[]> {
+   async findAll(homeId: string): Promise<MessageResponseDto[]> {
       const messages = await this.prismaService.message.findMany({
          where: { home_id: homeId }
       });
@@ -35,7 +40,7 @@ export class MessageService {
       }
 
       return messages.map((message) =>
-         plainToInstance(CreateMessageDto, message)
+         plainToInstance(MessageResponseDto, message)
       );
    }
 

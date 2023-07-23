@@ -3,11 +3,11 @@ import {
    Injectable,
    UnauthorizedException
 } from "@nestjs/common";
-import { CreateImageDto } from "./dto/create-image.dto";
 import { UpdateImageDto } from "./dto/update-image.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { plainToInstance } from "class-transformer";
 import { CreateImagesDto } from "./dto/create-images.dto";
+import { ImageResponseDto } from "./dto/image-response.dto";
 
 @Injectable()
 export class ImageService {
@@ -32,7 +32,7 @@ export class ImageService {
       url: string,
       homeId: string,
       userId: string
-   ): Promise<CreateImageDto> {
+   ): Promise<ImageResponseDto> {
       await this.homeOwnedByRealtor(homeId, userId);
 
       const image = await this.prismaService.image.create({
@@ -42,7 +42,7 @@ export class ImageService {
          }
       });
 
-      return plainToInstance(CreateImageDto, image);
+      return plainToInstance(ImageResponseDto, image);
    }
 
    async createMany(
@@ -73,7 +73,7 @@ export class ImageService {
       imageId: string,
       homeId: string,
       userId: string
-   ): Promise<CreateImageDto> {
+   ): Promise<ImageResponseDto> {
       try {
          const image = await this.prismaService.image.update({
             where: {
@@ -90,7 +90,7 @@ export class ImageService {
             data: updateImageDto
          });
 
-         return plainToInstance(CreateImageDto, image);
+         return plainToInstance(ImageResponseDto, image);
       } catch (err) {
          throw new BadRequestException("Image not found");
       }
